@@ -71,9 +71,12 @@ public class ProductController {
     }
 
 
+    // Ändrad till String för att kunna skicka med en beskrivande text framför siffran
     @GetMapping("/analytics/total-value")
-    public ResponseEntity<Double> getTotalValue() {
-        return ResponseEntity.ok(productService.calculateTotalInventoryValue());
+    public ResponseEntity<String> getTotalValue() {
+        double totalValue = productService.calculateTotalInventoryValue();
+        // Returnerar texten tillsammans med värdet formaterat med två decimaler
+        return ResponseEntity.ok("Totalt lagervärde: " + String.format("%.2f", totalValue) + " kr");
     }
 
     @GetMapping("/analytics/average-prices")
