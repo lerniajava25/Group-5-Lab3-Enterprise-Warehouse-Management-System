@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
@@ -55,5 +56,38 @@ public class ProductController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    // --- STREAMS ENDPOINTS ---
+
+    @GetMapping("/search/category")
+    public ResponseEntity<List<Product>> getByCategory(@RequestParam String category) {
+        return ResponseEntity.ok(productService.getProductsByCategory(category));
+    }
+
+    @GetMapping("/search/low-stock")
+    public ResponseEntity<List<Product>> getLowStock(@RequestParam(defaultValue = "5") int threshold) {
+        return ResponseEntity.ok(productService.getProductsWithLowStock(threshold));
+    }
+
+
+    @GetMapping("/analytics/total-value")
+    public ResponseEntity<Double> getTotalValue() {
+        return ResponseEntity.ok(productService.calculateTotalInventoryValue());
+    }
+
+    @GetMapping("/analytics/average-prices")
+    public ResponseEntity<Map<String, Double>> getAveragePrices() {
+        return ResponseEntity.ok(productService.getAveragePriceByCategory());
+    }
+
+    @GetMapping("/analytics/top-expensive")
+    public ResponseEntity<List<Product>> getTopExpensive(@RequestParam(defaultValue = "3") int limit) {
+        return ResponseEntity.ok(productService.getTopNExpensiveProducts(limit));
+    }
+
+    @GetMapping("/analytics/top-popular")
+    public ResponseEntity<List<Product>> getTopPopular(@RequestParam(defaultValue = "3") int limit) {
+        return ResponseEntity.ok(productService.getTopNPopularProducts(limit));
     }
 }

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Warehouse Management</title>
+</head>
+<body>
+<h1>Enterprise Warehouse Management System (Ghudsan, Osama, Waqar)</h1>
+
+<h2>Current Inventory:</h2>
+<ul>
+    <li th:each="product : ${products}">
+        <span th:text="${product.name}">Product Name</span> -
+        <span th:text="${product.price}">0.00</span> kr
+    </li>
+</ul>
+</body>
+</html>
