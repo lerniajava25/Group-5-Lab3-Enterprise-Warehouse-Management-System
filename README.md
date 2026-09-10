@@ -1,8 +1,8 @@
-# Group-5-Lab3-Enterprise-Warehouse-Management-System (Ghudsan, Osama, Waqar)
-Group 5-Lab3 Enterprise Warehouse Management System
+# Grupp-5-Lab3-Enterprise-Warehouse-Management-System (Ghudsan, Osama, Waqar)
+Grupp 5-Lab3 Enterprise Warehouse Management System
 
 
-## CURL commands for CRUD operations
+## CURL-kommandon för CRUD-operationer
 * curl -X GET http://localhost:8080/api/products
 * curl -X POST http://localhost:8080/api/products -H "Content-Type: application/json" -d "{\"name\": \"Mechanical Keyboard\", \"price\": 89.99}"
 * curl -X GET http://localhost:8080/api/products/1
