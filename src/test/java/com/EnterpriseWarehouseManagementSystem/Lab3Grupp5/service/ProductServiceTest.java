@@ -22,6 +22,11 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+/*
+ * Den har testklassen testar ProductService utan databas eller Spring-context.
+ * Varje test kontrollerar ett beteende i servicen med JUnit 5.
+ * Mockito anvands bara for att simulera en produkt vid uppdatering.
+ */
 class ProductServiceTest {
 
     private ProductService service;
@@ -39,9 +44,11 @@ class ProductServiceTest {
 
     @Test
     void createProductAssignsId() {
-        Product first = service.createProduct(product(100L, "Keyboard", "Electronics", 89.99, 10));
-        Product second = service.createProduct(product(200L, "Mouse", "Electronics", 29.99, 20));
+        // Happy path: nya produkter ska fa ID:n i ordningen 1, 2, 3 ...
+        Product first = service.createProduct(product(1L, "Keyboard", "Electronics", 89.99, 10));
+        Product second = service.createProduct(product(2L, "Mouse", "Electronics", 29.99, 20));
 
+        // Kontrollera bade ID:n och att bada produkterna sparades.
         assertEquals(1L, first.getId());
         assertEquals(2L, second.getId());
         assertEquals(List.of(first, second), service.getAllProducts());
@@ -49,11 +56,13 @@ class ProductServiceTest {
 
     @Test
     void getAllProductsIsEmpty() {
+        // Edge case: en ny service ska inte innehalla nagra produkter.
         assertTrue(service.getAllProducts().isEmpty());
     }
 
     @Test
     void getAllProductsReturnsCopy() {
+        // Den returnerade listan ska vara en kopia av service-listan.
         service.createProduct(product(1L, "Keyboard", "Electronics", 89.99, 10));
 
         List<Product> products = service.getAllProducts();
@@ -64,6 +73,7 @@ class ProductServiceTest {
 
     @Test
     void getProductByIdFindsProduct() {
+        // Happy path: hamta en produkt som finns.
         Product product = service.createProduct(product(1L, "Keyboard", "Electronics", 89.99, 10));
 
         Optional<Product> result = service.getProductById(product.getId());
@@ -74,15 +84,17 @@ class ProductServiceTest {
 
     @Test
     void getProductByIdReturnsEmpty() {
+        // Edge case: ett okant ID ska ge Optional.empty().
         assertTrue(service.getProductById(999L).isEmpty());
     }
 
     @Test
     void updateProductChangesFields() {
+        // Happy path: uppdatera namn och pris pa en befintlig produkt.
         Product existingProduct = service.createProduct(
                 product(1L, "Keyboard", "Electronics", 89.99, 10));
 
-        // Mockito simulerar produkten som skickas in vid uppdatering.
+        // Mockito simulerar den nya produkten som skickas in vid uppdatering.
         when(updatedProduct.getName()).thenReturn("Mouse");
         when(updatedProduct.getPrice()).thenReturn(29.99);
 
@@ -98,13 +110,16 @@ class ProductServiceTest {
 
     @Test
     void updateProductReturnsEmpty() {
+        // Edge case: om ID:t saknas ska inget uppdateras.
         assertTrue(service.updateProduct(999L, updatedProduct).isEmpty());
 
+        // Uppdateringsobjektet ska inte anvandas nar produkten saknas.
         verifyNoInteractions(updatedProduct);
     }
 
     @Test
     void deleteProductRemovesProduct() {
+        // Happy path: en befintlig produkt ska kunna raderas.
         Product product = service.createProduct(product(1L, "Keyboard", "Electronics", 89.99, 10));
 
         assertTrue(service.deleteProduct(product.getId()));
@@ -113,6 +128,7 @@ class ProductServiceTest {
 
     @Test
     void deleteProductReturnsFalse() {
+        // Edge case: radering av ett okant ID ska returnera false.
         assertFalse(service.deleteProduct(999L));
     }
 
@@ -120,6 +136,7 @@ class ProductServiceTest {
 
     @Test
     void getProductsByCategoryIsCaseInsensitive() {
+        // Sökningen ska fungera med både stora och små bokstäver.
         Product keyboard = service.createProduct(
                 product(1L, "Keyboard", "Electronics", 89.99, 10));
         service.createProduct(product(2L, "Chair", "Furniture", 49.99, 5));
@@ -130,6 +147,7 @@ class ProductServiceTest {
 
     @Test
     void getProductsByCategoryReturnsEmpty() {
+        // Om ingen produkt matchar kategorin ska resultatet vara tomt.
         service.createProduct(product(1L, "Keyboard", "Electronics", 89.99, 10));
 
         assertTrue(service.getProductsByCategory("Furniture").isEmpty());
@@ -137,6 +155,7 @@ class ProductServiceTest {
 
     @Test
     void getProductsWithLowStockFindsProducts() {
+        // Produkter under tröskelvärdet ska hittas.
         Product lowStock = service.createProduct(
                 product(1L, "Keyboard", "Electronics", 89.99, 4));
         service.createProduct(product(2L, "Mouse", "Electronics", 29.99, 10));
@@ -146,6 +165,7 @@ class ProductServiceTest {
 
     @Test
     void getProductsWithLowStockRespectsThreshold() {
+        // En produkt på exakt gränsen ska inte räknas som låg i lager.
         Product product = service.createProduct(
                 product(1L, "Keyboard", "Electronics", 89.99, 5));
 
@@ -156,6 +176,7 @@ class ProductServiceTest {
 
     @Test
     void calculateTotalInventoryValue() {
+        // Lagervärde beräknas som pris multiplicerat med lagersaldo.
         service.createProduct(product(1L, "Keyboard", "Electronics", 10.00, 3));
         service.createProduct(product(2L, "Mouse", "Electronics", 5.50, 2));
 
@@ -164,22 +185,27 @@ class ProductServiceTest {
 
     @Test
     void calculateTotalInventoryValueIsZeroWhenEmpty() {
+        // Ett tomt lager ska ha lagervärdet noll.
         assertEquals(0.0, service.calculateTotalInventoryValue());
     }
 
     @Test
     void getAveragePriceByCategory() {
+        // Genomsnittspriset beräknas separat för varje kategori.
         service.createProduct(product(1L, "Keyboard", "Electronics", 90.00, 10));
         service.createProduct(product(2L, "Mouse", "Electronics", 30.00, 10));
-        service.createProduct(product(3L, "Chair", null, 50.00, 5));
+        service.createProduct(product(3L, "Chair", "Furniture", 50.00, 5));
+        service.createProduct(product(4L, "Table", "Furniture", 35, 5));
+
 
         Map<String, Double> result = service.getAveragePriceByCategory();
 
-        assertEquals(Map.of("Electronics", 60.0), result);
+        assertEquals(Map.of("Electronics", 60.0, "Furniture", 42.5), result);
     }
 
     @Test
     void getTopNExpensiveProductsSortsByPrice() {
+        // Produkterna ska sorteras från dyrast till billigast.
         Product expensive = service.createProduct(
                 product(1L, "Monitor", "Electronics", 199.99, 3));
         Product medium = service.createProduct(
@@ -191,6 +217,7 @@ class ProductServiceTest {
 
     @Test
     void getTopNPopularProductsSortsByStock() {
+        // Popularitet representeras här av högst lagersaldo.
         Product popular = service.createProduct(
                 product(1L, "Mouse", "Electronics", 29.99, 20));
         Product second = service.createProduct(
@@ -202,6 +229,7 @@ class ProductServiceTest {
 
     @Test
     void topNMethodsReturnEmptyForZero() {
+        // Edge case: noll produkter ska ge en tom lista.
         service.createProduct(product(1L, "Keyboard", "Electronics", 89.99, 10));
 
         assertTrue(service.getTopNExpensiveProducts(0).isEmpty());
@@ -210,6 +238,7 @@ class ProductServiceTest {
 
     @Test
     void topNMethodsRejectNegative() {
+        // Felhantering: ett negativt antal produkter är ogiltigt.
         assertThrows(IllegalArgumentException.class, () -> service.getTopNExpensiveProducts(-1));
         assertThrows(IllegalArgumentException.class, () -> service.getTopNPopularProducts(-1));
     }
