@@ -216,7 +216,7 @@ class ProductServiceTest {
 
     @Test
     void getTopNPopularProductsSortsByStock() {
-        // Popularitet representeras här av högst lagersaldo.
+        // De 2 produkterna med flest i lager ska komma först..
         Product popular = service.createProduct(
                 product(1L, "Mouse", "Electronics", 29.99, 20));
         Product second = service.createProduct(
