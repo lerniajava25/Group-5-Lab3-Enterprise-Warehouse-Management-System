@@ -31,7 +31,7 @@ class ProductServiceTest {
 
     @BeforeEach
     void setUp() {
-        // En ny service ger isolerade tester utan data fran tidigare test.
+        // En ny service ger tester utan data fran tidigare test.
         service = new ProductService();
     }
 
@@ -116,7 +116,7 @@ class ProductServiceTest {
         assertFalse(service.deleteProduct(999L));
     }
 
-    // Stream-metoder: filtrering, berakningar och sortering.
+    // Stream-metoder: filtrering, beräkningar och sortering.
 
     @Test
     void getProductsByCategoryIsCaseInsensitive() {
@@ -214,7 +214,7 @@ class ProductServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.getTopNPopularProducts(-1));
     }
 
-    // Gemensam fabrik for tydliga och konsekventa testprodukter.
+    // Hjälpmetod för att skapa testprodukter
     private Product product(Long id, String name, String category, double price, int stockQuantity) {
         return new Product(id, name, category, price, stockQuantity, LocalDate.of(2026, 1, 1));
     }
