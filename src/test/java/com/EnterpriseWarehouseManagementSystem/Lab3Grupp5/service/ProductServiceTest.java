@@ -155,8 +155,7 @@ class ProductServiceTest {
 
     @Test
     void getProductsWithLowStockFindsProducts() {
-        // Produkter under tröskelvärdet ska hittas.
-        Product lowStock = service.createProduct(
+       // Produkter som har mindre lager än gränsen ska hittas.        Product lowStock = service.createProduct(
                 product(1L, "Keyboard", "Electronics", 89.99, 4));
         service.createProduct(product(2L, "Mouse", "Electronics", 29.99, 10));
 
