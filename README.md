@@ -39,5 +39,43 @@ Testlänkar för Java Streams (Del 2)Kopiera och klistra in dessa länkar direkt
 
 
 
-## Reflektion om hur Spring Boot underlättar utvecklingen
-Spring Boot gör det mycket enklare att bygga program eftersom det har färdiga inställningar, så utvecklare slipper konfigurera allt manuellt och sparar mycket tid. När man jämför Java och Spring Boot med Microsofts C# och .NET, ser man att båda systemen är mycket populära för stora företag, väldigt säkra och byggda med liknande programmeringsspråk. Den största skillnaden är att .NET kommer helt från Microsoft och är väldigt smidigt och färdigt direkt, medan Java är mer uppdelat och bygger på att man pusslar ihop olika gratisverktyg från hela världen.
+---
+
+## JUnit-testning och Mockito
+
+För att kontrollera att systemet fungerar korrekt har vi skrivit enhetstester med **JUnit 5**. Ett enhetstest testar en liten del av programmet, till exempel en metod i `ProductService`, utan att hela applikationen behöver startas.
+
+I våra tester kontrollerar vi bland annat att:
+
+* produkter får ett unikt ID när de skapas
+* produkter kan hämtas, uppdateras och raderas
+* sökning efter kategori och produkter med lågt lagersaldo fungerar
+* det totala lagervärdet och medelpriset per kategori räknas ut korrekt
+* produkter sorteras rätt efter pris eller lagersaldo
+* ett okänt ID eller ett ogiltigt värde hanteras på rätt sätt
+
+JUnit använder olika metoder för att kontrollera resultatet. Exempelvis betyder `assertEquals` att det förväntade värdet ska vara samma som det faktiska värdet, medan `assertTrue` kontrollerar att ett villkor är sant. Med `@BeforeEach` skapas en ny och tom `ProductService` före varje test. På så sätt påverkar inte ett test nästa test.
+
+### Mockito
+
+**Mockito** används för att skapa en mock, alltså ett simulerat objekt som används i stället för ett riktigt objekt. I `ProductServiceTest` används `@Mock` på en simulerad `Product`. Med `when(...).thenReturn(...)` bestämmer vi vad mock-objektet ska returnera:
+
+```java
+when(updatedProduct.getName()).thenReturn("Mouse");
+when(updatedProduct.getPrice()).thenReturn(29.99);
+```
+
+Det gör att vi kan testa uppdateringen utan att behöva skapa en separat produkt på riktigt. Med `verify` kontrollerar vi dessutom att rätt metod  anropades:
+
+```java
+verify(updatedProduct).getName();
+verify(updatedProduct).getPrice();
+```
+
+### Happy path och edge cases
+
+Vi använder både **happy path-tester** och **edge case-tester**:
+
+* **Happy path** betyder att systemet får giltiga värden och ska fungera normalt. Exempel är att skapa en produkt, hitta en produkt med ett befintligt ID eller räkna ut lagervärdet för produkter som finns i lagret.
+* **Edge cases** testar gränser och ovanliga situationer. Exempel i våra tester är ett tomt lager, ett ID som inte finns, en produkt som ligger exakt på gränsen för lågt lagersaldo, `n = 0` vid sortering samt ett negativt `n`.
+
