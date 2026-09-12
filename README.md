@@ -72,3 +72,43 @@ Vi jämför här hur **Java/Spring Boot** hanterar databehandling i minnet jämf
 ### Slutsats
 För ett lagerhanteringssystem där datakvalitet, trådsäkerhet och tunga aggregeringar är centralt är **Java och Spring Boot Streams API** det starkare valet då det erbjuder överlägsen minneshantering (lazy evaluation) och inbyggd trådsäkerhet. **Node.js** är smidigt för snabb utveckling, men kräver mycket mer försiktighet vid tunga matematiska beräkningar för att inte blockera servern.
 
+---
+
+## JUnit-testning och Mockito
+
+För att kontrollera att systemet fungerar korrekt har vi skrivit enhetstester med **JUnit 5**. Ett enhetstest testar en liten del av programmet, till exempel en metod i `ProductService`, utan att hela applikationen behöver startas.
+
+I våra tester kontrollerar vi bland annat att:
+
+* produkter får ett unikt ID när de skapas
+* produkter kan hämtas, uppdateras och raderas
+* sökning efter kategori och produkter med lågt lagersaldo fungerar
+* det totala lagervärdet och medelpriset per kategori räknas ut korrekt
+* produkter sorteras rätt efter pris eller lagersaldo
+* ett okänt ID eller ett ogiltigt värde hanteras på rätt sätt
+
+JUnit använder olika metoder för att kontrollera resultatet. Exempelvis betyder `assertEquals` att det förväntade värdet ska vara samma som det faktiska värdet, medan `assertTrue` kontrollerar att ett villkor är sant. Med `@BeforeEach` skapas en ny och tom `ProductService` före varje test. På så sätt påverkar inte ett test nästa test.
+
+### Mockito
+
+**Mockito** används för att skapa en mock, alltså ett simulerat objekt som används i stället för ett riktigt objekt. I `ProductServiceTest` används `@Mock` på en simulerad `Product`. Med `when(...).thenReturn(...)` bestämmer vi vad mock-objektet ska returnera:
+
+```java
+when(updatedProduct.getName()).thenReturn("Mouse");
+when(updatedProduct.getPrice()).thenReturn(29.99);
+```
+
+Det gör att vi kan testa uppdateringen utan att behöva skapa en separat produkt på riktigt. Med `verify` kontrollerar vi dessutom att rätt metod  anropades:
+
+```java
+verify(updatedProduct).getName();
+verify(updatedProduct).getPrice();
+```
+
+### Happy path och edge cases
+
+Vi använder både **happy path-tester** och **edge case-tester**:
+
+* **Happy path** betyder att systemet får giltiga värden och ska fungera normalt. Exempel är att skapa en produkt, hitta en produkt med ett befintligt ID eller räkna ut lagervärdet för produkter som finns i lagret.
+* **Edge cases** testar gränser och ovanliga situationer. Exempel i våra tester är ett tomt lager, ett ID som inte finns, en produkt som ligger exakt på gränsen för lågt lagersaldo, `n = 0` vid sortering samt ett negativt `n`.
+
