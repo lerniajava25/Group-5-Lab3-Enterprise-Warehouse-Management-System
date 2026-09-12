@@ -37,6 +37,40 @@ Testlänkar för Java Streams (Del 2)Kopiera och klistra in dessa länkar direkt
    Sorterar produkterna efter lagersaldo (högst saldo först) och begränsar listan till det antal (limit) ni valt.
 * Länk: http://localhost:8080/api/products/analytics/top-popular?limit=2
 
+# Teknisk Rapport: Lagerhanteringssystem (Java Streams & Analys)
+
+Denna rapport dokumenterar hur minnesbaserad databearbetning har implementerats med Java Streams API samt en branschanalys kring detta teknikval.
+
+---
+
+## 1. Reflektion: Hur Spring Boot underlättar utvecklingen av Stream-logik
+
+Spring Boot har underlättat utvecklingen av vår avancerade lageranalys genom att erbjuda en sömlös integration mellan webb-endpoints och vårt interna servicelager:
+
+*   **Sömlös parametrisering till Streams:** Genom `@RequestParam` (t.ex. vid `/search/low-stock?threshold=5` eller `?limit=2`) mappar Spring Boot automatiskt värden från webbläsarens adressfält direkt in som argument till våra Stream-metoder. Vi slipper skriva manuell kod för att hämta, typkonvertera och validera text från HTTP-anrop.
+*   **Direkt JSON-serialisering av komplexa Streams-resultat:** När vår Java Stream transformerar data till komplexa strukturer, som när `.collect(Collectors.groupingBy(...))` skapar en `Map<String, Double>` för medelpriser, konverterar Spring Boots inbyggda Jackson-modul detta direkt till ett snyggt JSON-objekt till webbläsaren utan att vi behöver skriva någon extra kod.
+*   **Trådsäkerhet i flertrådad miljö:** Spring Boot körs på en flertrådad Tomcat-server där varje HTTP-anrop körs i en egen tråd. Eftersom vi har implementerat en trådsäker `CopyOnWriteArrayList` kan våra Java Streams säkert läsa, filtrera och sortera datan samtidigt, även om flera användare anropar vårt API exakt samtidigt.
+
+---
+
+## 2. Branschanalys & Språkjämförelse: Java Streams vs. Node.js (Array-metoder)
+
+Vi jämför här hur **Java/Spring Boot** hanterar databehandling i minnet jämfört med **Node.js (JavaScript)**, vilket är en annan mycket populär miljö för API-utveckling.
+
+### Vad som är SAMMA:
+*   **Funktionell programmeringsstil:** Både Java Streams (med `.filter()`, `.sorted()`, `.map()`) och JavaScript i Node.js (med `.filter()`, `.sort()`, `.map()`) använder en deklarativ stil. Man beskriver *vad* man vill uppnå med datan snarare än *hur* loopen ska stegas igenom (imperativ kod).
+*   **Icke-destruktiva operationer:** Varken Java Streams eller JavaScripts inbyggda array-metoder ändrar på ursprungslistan (`productList`) under filtreringen eller sorteringen, utan de skapar nya representationer av datan.
+
+### Vad som SKILJER:
+
+| Egenskap | Java / Spring Boot (Streams API) | Node.js (JavaScript Array Methods) |
+| :--- | :--- | :--- |
+| **Exekveringsmodell** | **Lazy Evaluation (Lat utvärdering).** En Java Stream gör ingenting förrän en *terminal operation* (som `.collect()` eller `.sum()`) anropas. Detta gör den extremt minneseffektiv vid stora datamängder. | **Eager Evaluation (Irig utvärdering).** Varje metod i Node.js (t.ex. en `.filter().map()`) skapar en helt ny tillfällig array i minnet direkt efter varje steg, vilket drar mer RAM-minne. |
+| **Trådsäkerhet & Multithreading** | **Flertrådad databearbetning.** Eftersom Spring Boot hanterar trådar kan vi med ett enkelt metodanrop byta till `.parallelStream()` för att fördela tunga analysberäkningar (som lagervärde och medelpriser) över datorns alla CPU-kärnor automatiskt. | **Enkeltrådad (Single-threaded).** All databearbetning och sortering sker på en enda tråd. Om en array är gigantisk och sorteringen tar tid, fryser hela Node.js-servern för alla andra användare under tiden. |
+| **Typsäkerhet vid transformation** | **Statiskt typat.** Kompilatorn säkerställer att vi inte råkar räkna ut medelpris på ett textfält eller multiplicera fel datatyper i vår Stream. Fel upptäcks innan koden körs. | **Dynamiskt typat.** Det är lättare att råka introducera buggar (t.ex. att ett pris behandlas som textsträngen `"3500"` istället för siffran `3500`), vilket kan leda till att beräkningar blir `NaN` under körning. |
+
+### Slutsats
+För ett lagerhanteringssystem där datakvalitet, trådsäkerhet och tunga aggregeringar är centralt är **Java och Spring Boot Streams API** det starkare valet då det erbjuder överlägsen minneshantering (lazy evaluation) och inbyggd trådsäkerhet. **Node.js** är smidigt för snabb utveckling, men kräver mycket mer försiktighet vid tunga matematiska beräkningar för att inte blockera servern.
 
 
 ---
